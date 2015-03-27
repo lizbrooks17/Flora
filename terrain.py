@@ -18,6 +18,9 @@ colors = { 'black':(0,0,0),
           }
 
 blues = [(102,178,255),(0,128,255),(0,128,255),(0,0,255),(0,0,255),(0,0,153),]
+flowers = {'daisy':colors['yellow'],'rose':colors['red'],
+           'clover':colors['green']}
+flower_pos = [(4,9),(10,4),(16,7)]
 
 def set_color():
     #color = random.choice(colors.keys())
@@ -26,7 +29,20 @@ def set_color():
     return color
 
 def set_flower():
-    return None
+    if random.random() > 0.15:
+        return (None,None)
+    else:
+        flower = random.choice(flowers.keys())
+        quantity = random.choice([1,2,2,2,3,3])
+        return (flower,quantity)
+
+def draw_flower(surf,flower,num):
+    new_surf = pygame.Surface(surf.get_size())
+    for i in range(num):
+        pygame.draw.circle(new_surf,flowers[flower],flower_pos[i], 3, 0)
+    new_surf.set_colorkey((0,0,0))
+    return new_surf
+
 
 class Tile:
     def __init__(self,X,Y,side):
@@ -37,7 +53,7 @@ class Tile:
         self.surface.fill(colors['black'])
         self.color = set_color()
         self.visible = NO
-        self.flower = set_flower()
+        self.flower_type,self.flower_qty = set_flower()
     def get_position(self):
         x = self.X * self.side
         y = self.Y * self.side
@@ -45,9 +61,15 @@ class Tile:
     def get_surface(self):
         if self.visible:
             self.surface.fill(self.color)
+            if self.flower_type:
+                flwr = draw_flower(self.surface,self.flower_type,
+                                   self.flower_qty)
+                self.surface.blit(flwr,(0,0))
         return self.surface
     def make_visible(self):
         self.visible = YES
+    def pick_flower(self):
+        self.flower_qty = self.flower_qty-1 if self.flower_qty>0 else 0
 
 class Terrain:
     terrain = []
