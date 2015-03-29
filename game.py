@@ -51,6 +51,7 @@ tbasket = text.render(u'My Basket',True,tcolor)
 screen.blit(tbasket,(w,4*h+3*inc))
 tgather = text.render(u'Gather',True,tcolor)
 screen.blit(tgather,(w,8*h+7*inc))
+### ###
 
 def update_screentime(last):
     millisecs = pygame.time.get_ticks()
