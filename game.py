@@ -6,52 +6,37 @@
 import sys
 import pygame
 from terrain import Terrain, colors
+from panel import Sidepanel, Basket
 
 pygame.init()
 board_size = width, height = 720, 528
-score_panel = 168
+panelwidth = 168
 tile_size = 24
 visibility = 1
 timer = 5 * 60   #seconds
 
-screen = pygame.display.set_mode((width+score_panel,height))
+screen = pygame.display.set_mode((width+panelwidth,height))
 screen.fill(colors['light gray'])
 
-t = Terrain(width, height, tile_size)
-for row in t.terrain:
+### set up map board ###
+board = Terrain(width, height, tile_size)
+for row in board.terrain:
     for tile in row:
         screen.blit(tile.get_surface(),tile.get_position())
 pygame.display.flip()
-sqY = len(t.terrain)
-sqX = len(t.terrain[0])
+sqY = len(board.terrain)
+sqX = len(board.terrain[0])
 
 ### set up score panel ###
-s = 10
-w = width + s
-h = s
+side = Sidepanel(panelwidth,height,colors['light gray'])
+screen.blit(side.get_surface(),(width,0))
+pygame.display.flip()
 
-if not pygame.font.get_init(): sys.exit("missing font module")
-text = pygame.font.SysFont('Arial',20)
-inc = text.get_linesize()
-tcolor = colors['black']
-
-tscore = text.render(u'Score',True,tcolor)
-screen.blit(tscore,(w,h))
-scorebox = pygame.Surface((50,inc))
-scorebox.fill((210,210,210))
-scorepos = (w+tscore.get_width()+s,h)
-screen.blit(scorebox,scorepos)
-tclock = text.render(u'Time Remaining',True,tcolor)
-screen.blit(tclock,(w,h+s+inc))
-clockbox = pygame.Surface((80,inc))
-clockbox.fill((210,210,210))    #colors['light gray'])
-clockpos = (w+s,h+2*s+2*inc)
-screen.blit(clockbox,clockpos)
-tbasket = text.render(u'My Basket',True,tcolor)
-screen.blit(tbasket,(w,4*h+3*inc))
-tgather = text.render(u'Gather',True,tcolor)
-screen.blit(tgather,(w,8*h+7*inc))
-### ###
+def pick_flower(X,Y):
+    tile = board.terrain[Y][X]
+    flower = tile.get_flower() # color triple for now, later image or surf
+    if flower:
+        if not basket.add_flower(flower): print 'Basket Full'
 
 def update_screentime(last):
     millisecs = pygame.time.get_ticks()
@@ -83,24 +68,28 @@ def visible(X,Y,V):
         for y in range(Y-V, Y+V+1):
             if x<0 or x>=sqX: continue
             if y<0 or y>=sqY: continue
-            t.terrain[y][x].make_visible()
-            current.append(t.terrain[y][x])
+            board.terrain[y][x].make_visible()
+            current.append(board.terrain[y][x])
     return current
 
 myX = width/tile_size/2
 myY = height/tile_size/2
 current = visible(myX,myY,visibility)
-for tile in current:
-    screen.blit(tile.get_surface(),tile.get_position()) # surrounding tiles
-screen.blit(me, coords(myX,myY))
-pygame.display.flip()
+
+def redrawme():
+    for tile in current:
+        screen.blit(tile.get_surface(),tile.get_position()) 
+    screen.blit(me, coords(myX,myY))
+    pygame.display.flip()
+
+redrawme()
 
 clock = pygame.time.Clock()
 ticker = 0
 
 while 1:
     clock.tick(10) # limits the while loop to a max of 10 times per second
-    ticker = update_screentime(ticker)
+    #DEBUG ticker = update_screentime(ticker)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
@@ -108,8 +97,9 @@ while 1:
             (cuX,cuY) = pygame.mouse.get_pos()
             if cuX >= width:
                 pass
-            elif cuX == myX and cuY == myY:
-                pass#pick flower
+            elif cuX/tile_size == myX and cuY/tile_size == myY:
+                pick_flower(myX,myY)
+                redrawme()
             elif cuX < width and cuY < height:
                 for tile in current:
                     surf = tile.get_surface()
@@ -121,10 +111,7 @@ while 1:
                 if cuY/tile_size < myY: myY = myY - 1
                 if cuY/tile_size > myY: myY = myY + 1
                 current = visible(myX,myY,visibility)
-                for tile in current: # blit surrounding tiles
-                    screen.blit(tile.get_surface(),tile.get_position()) 
-                screen.blit(me, coords(myX,myY))  # blit me
-                pygame.display.flip()
+                redrawme()
 
 
 #sys.exit()
