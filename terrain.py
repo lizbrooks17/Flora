@@ -77,6 +77,8 @@ class Tile:
             return self.flower_type
         else:
             return None
+    def replace_flower(self):
+        self.flower_qty = self.flower_qty + 1
 
 class Terrain:
     terrain = []
